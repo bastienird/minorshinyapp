@@ -6,7 +6,7 @@ on:
       - 'main'
 
 env:
-  CACHE_IMAGE: ghcr.io/bastienird/minorshinyapp-cache
+  CACHE_IMAGE: ghcr.io/bastienird/minorshinyappTest-cache
   DOCKER_BUILDKIT: 1
   RENV_PATHS_ROOT: ~/.cache/R/renv
 
@@ -21,7 +21,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/bastienird/minorshinyapp
+          images: ghcr.io/bastienird/minorshinyappTest
           flavor: latest=true
           tags: |
             type=ref,event=branch
@@ -30,7 +30,7 @@ jobs:
           labels: |
             org.opencontainers.image.url=${{ github.repository }}
             org.opencontainers.image.source=${{ github.repository }}
-            org.opencontainers.image.title=minorshinyapp
+            org.opencontainers.image.title=minorshinyappTest
             org.opencontainers.image.description=Minor shiny app to test renv cache
             org.opencontainers.image.vendor=IRD
             org.opencontainers.image.author=Bastien Grasset <bastien.grasset@ird.fr>
@@ -71,6 +71,6 @@ jobs:
           docker buildx build \
             --cache-from type=registry,ref=$CACHE_IMAGE:latest \
             --cache-to type=registry,ref=$CACHE_IMAGE:latest,mode=max \
-            --tag ghcr.io/bastienird/minorshinyapp:latest \
+            --tag ghcr.io/bastienird/minorshinyappTest:latest \
             --build-arg RENV_PATHS_ROOT=${{ env.RENV_PATHS_ROOT }} \
             --push .
