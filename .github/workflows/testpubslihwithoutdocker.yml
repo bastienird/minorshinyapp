@@ -33,26 +33,43 @@ jobs:
             org.opencontainers.image.vendor=IRD
             org.opencontainers.image.author=Bastien Grasset <bastien.grasset@ird.fr>
 
+      - name: Get R and OS version
+        id: get-version
+        run: |
+          echo "os-version=$(lsb_release -d | cut -f2)" >> $GITHUB_ENV
+          echo "r-version=$(R --version | head -n 1)" >> $GITHUB_ENV
+
+      - name: Restore Renv package cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.RENV_PATHS_ROOT }}
+          key: ${{ env.os-version }}-R-${{ env.r-version }}-${{ hashFiles('renv.lock') }}
+          restore-keys: |
+            ${{ env.os-version }}-R-${{ env.r-version }}-
+            ${{ env.os-version }}-R-
+            ${{ env.os-version }}-
+
+      - name: Install and activate renv
+        run: |
+          Rscript -e "install.packages('renv', repos='https://cran.r-project.org')"
+          Rscript -e "renv::restore()"
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/bastienird/minorshinyapp
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+      
       - name: Login to image repository
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Get R and OS version
-        id: get-version
-        run: |
-          cat("##[set-output name=os-version;]", sessionInfo()$running, "\n", sep = "")
-          cat("##[set-output name=r-version;]", R.Version()$version.string, sep = "")
-        shell: Rscript {0}
-
-      - name: Restore Renv package cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.RENV_PATHS_ROOT }}
-          key: ${{ steps.get-version.outputs.os-version }}-${{ steps.get-version.outputs.r-version }}-${{ hashFiles('renv.lock') }}
-          restore-keys: ${{ steps.get-version.outputs.os-version }}-${{ steps.get-version.outputs.r-version }}-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3

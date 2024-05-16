@@ -1,7 +1,7 @@
 FROM rocker/r-ver:4.2.3
 
 # Maintainer information
-MAINTAINER Julien Barde "julien.barde@ird.fr"
+MAINTAINER Bastien Grasset "bastien.grasset@ird.fr"
 
 # Install system libraries of general use
 RUN apt-get update && apt-get install -y \
@@ -34,6 +34,11 @@ RUN R -e "install.packages(c('remotes', 'jsonlite', 'yaml'), repos='https://cran
 # Install renv package
 RUN R -e "install.packages('renv', repos='https://cran.r-project.org/')"
 
+ARG RENV_PATHS_ROOT=/root/minorshinyapp/renv/.cache
+# Set environment variables based on build arguments
+ENV RENV_PATHS_ROOT=${RENV_PATHS_ROOT}
+RUN mkdir -p RENV_PATHS_ROOT
+
 # Set the working directory
 WORKDIR /root/minorshinyapp
 
@@ -42,13 +47,6 @@ COPY renv.lock renv.lock
 COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
-
-# Setup the cache directory with a default value
-ARG RENV_PATHS_ROOT=/root/minorshinyapp/renv/.cache
-ENV RENV_PATHS_ROOT=${RENV_PATHS_ROOT}
-
-# change default location of cache to project folder
-RUN mkdir -p ${RENV_PATHS_ROOT}
 
 # Restore renv packages
 RUN R -e "renv::restore()"
