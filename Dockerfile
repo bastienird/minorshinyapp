@@ -1,4 +1,4 @@
-ROM rocker/r-ver:4.2.3
+FROM rocker/r-ver:4.2.3
 
 # Maintainer information
 MAINTAINER Julien Barde "julien.barde@ird.fr"
