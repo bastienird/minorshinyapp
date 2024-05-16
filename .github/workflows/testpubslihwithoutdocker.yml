@@ -11,7 +11,7 @@ env:
   RENV_PATHS_ROOT: ~/.cache/R/renv
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -47,16 +47,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Create and bootstrap builder
         run: |
           docker buildx create --use --name builder
           docker buildx inspect builder --bootstrap
-          docker build \
+
+      - name: Build and push Docker image
+        run: |
+          docker buildx build \
             --cache-from type=registry,ref=$CACHE_IMAGE:latest \
-            --cache-to type=inline \
+            --cache-to type=registry,ref=$CACHE_IMAGE:latest,mode=max \
             --tag ghcr.io/bastienird/minorshinyapp:latest \
             --build-arg RENV_PATHS_ROOT=${{ env.RENV_PATHS_ROOT }} \
-            --build-arg BUILDKIT_INLINE_CACHE=1 \
-            .
-          docker push ghcr.io/bastienird/minorshinyapp:latest
-          docker push $CACHE_IMAGE:latest
+            --push .
