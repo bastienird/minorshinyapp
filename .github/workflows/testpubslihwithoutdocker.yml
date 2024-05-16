@@ -29,9 +29,9 @@ jobs:
             org.opencontainers.image.url=${{ github.repository }}
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.title=minorshinyapp
-            org.opencontainers.image.description=testminorshinyforcache
+            org.opencontainers.image.description=Minor shiny app to test renv cache
             org.opencontainers.image.vendor=IRD
-            org.opencontainers.image.author=bastien Grasset <bastien.grasset@ird.fr>
+            org.opencontainers.image.author=Bastien Grasset <bastien.grasset@ird.fr>
 
       - name: Login to image repository
         uses: docker/login-action@v2
@@ -40,37 +40,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Set RENV_PATHS_ROOT
-        shell: bash
-        run: |
-          echo "RENV_PATHS_ROOT=${{ runner.temp }}/renv" >> $GITHUB_ENV
-
-      - name: Install and activate renv
-        run: |
-          install.packages('renv', repos='https://cran.r-project.org/', lib = '${{ runner.temp }}/renv')
-          renv::activate()
-        shell: Rscript {0}
-
-      - name: Get R and OS version
-        id: get-version
-        run: |
-          cat("##[set-output name=os-version;]", sessionInfo()$running, "\n", sep = "")
-          cat("##[set-output name=r-version;]", R.Version()$version.string, sep = "")
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.RENV_PATHS_ROOT }}
-          key: ${{ steps.get-version.outputs.os-version }}-${{ steps.get-version.outputs.r-version }}-${{ hashFiles('renv.lock') }}
-          restore-keys: |
-            ${{ steps.get-version.outputs.os-version }}-${{ steps.get-version.outputs.r-version }}-
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           file: Dockerfile
           push: true
+          build-args: |
+            RENV_PATHS_ROOT=${{ env.RENV_PATHS_ROOT }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
