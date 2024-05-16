@@ -43,11 +43,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ env.RENV_PATHS_ROOT }}
-          key: ${{ env.os-version }}-R-${{ env.r-version }}-${{ hashFiles('renv.lock') }}
+          key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
           restore-keys: |
-            ${{ env.os-version }}-R-${{ env.r-version }}-
-            ${{ env.os-version }}-R-
-            ${{ env.os-version }}-
+            ${{ runner.os }}-renv-
 
       - name: Install and activate renv
         run: |
